@@ -37,6 +37,14 @@
  */
 package it.unipd.math.pcd.actors;
 
+import it.unipd.math.pcd.actors.exceptions.UnsupportedMessageException;
+import javafx.util.Pair;
+
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
+
 /**
  * Defines common properties of all actors.
  *
@@ -44,8 +52,41 @@ package it.unipd.math.pcd.actors;
  * @version 1.0
  * @since 1.0
  */
-public abstract class AbsActor<T extends Message> implements Actor<T> {
+public abstract class AbsActor<T extends Message>extends Thread implements Actor<T> {
 
+
+    @Override
+    public void run() {
+        actorLock.lock();
+        try {
+            while (!Thread.interrupted()) {
+                Pair<T, ActorRef> box;
+
+                 while (mailBox.isEmpty()) {
+                     try {
+                         emptyBox.wait();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                 }
+                  box = mailBox.remove();
+
+
+                try {
+                   sender = box.getValue();
+                   receive(box.getKey());
+                } catch (ClassCastException e) {
+                    throw new UnsupportedMessageException(box.getKey());
+                 }
+            }
+        }finally {
+            actorLock.unlock();
+        }
+    }
+
+    private Queue<Pair<T, ActorRef>> mailBox = new LinkedList<>();
+    private ReentrantLock actorLock= new ReentrantLock();
+    private Condition emptyBox= actorLock.newCondition();
     /**
      * Self-reference of the actor
      */
@@ -54,7 +95,7 @@ public abstract class AbsActor<T extends Message> implements Actor<T> {
     /**
      * Sender of the current message
      */
-    protected ActorRef<T> sender;
+    protected ActorRef sender;
 
     /**
      * Sets the self-referece.
@@ -65,5 +106,14 @@ public abstract class AbsActor<T extends Message> implements Actor<T> {
     protected final Actor<T> setSelf(ActorRef<T> self) {
         this.self = self;
         return this;
+    }
+    public void insertMailBox(T message, ActorRef from) {
+        actorLock.lock();
+        try{
+            mailBox.add(new Pair<>(message, from));
+            emptyBox.notifyAll();
+        }finally {
+            actorLock.unlock();
+        }
     }
 }

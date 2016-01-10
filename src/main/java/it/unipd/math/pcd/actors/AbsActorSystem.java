@@ -78,6 +78,25 @@ public abstract class AbsActorSystem implements ActorSystem {
     public ActorRef<? extends Message> actorOf(Class<? extends Actor> actor) {
         return this.actorOf(actor, ActorMode.LOCAL);
     }
+    /*public Actor getActorPublic(ActorRef ref) {
+        return actors.get(ref);
+    }*/
 
+    protected Actor getActor(ActorRef ref) {
+        return actors.get(ref);
+    }
+    @Override
+    public void stop(ActorRef<?> actor) {
+        ((AbsActor)actors.get(actor)).interrupt();
+        actors.remove(actor);
+    }
+
+    @Override
+    public void stop() {
+        for (Map.Entry<ActorRef<? extends Message>, Actor<? extends Message>>  a : actors.entrySet())  {
+            ((AbsActor)a.getValue()).interrupt();
+            actors.remove(a);
+        }
+    }
     protected abstract ActorRef createActorReference(ActorMode mode);
 }
