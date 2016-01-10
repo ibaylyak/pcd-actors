@@ -52,41 +52,37 @@ import java.util.concurrent.locks.ReentrantLock;
  * @version 1.0
  * @since 1.0
  */
-public abstract class AbsActor<T extends Message>extends Thread implements Actor<T> {
+public abstract class AbsActor<T extends Message> extends Thread implements  Actor<T> {
 
 
     @Override
     public void run() {
-        actorLock.lock();
-        try {
-            while (!Thread.interrupted()) {
-                Pair<T, ActorRef> box;
+        while (!Thread.interrupted()) {
+            Pair<T, ActorRef> box;
 
-                 while (mailBox.isEmpty()) {
-                     try {
-                         emptyBox.wait();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                 }
-                  box = mailBox.remove();
-
-
-                try {
-                   sender = box.getValue();
-                   receive(box.getKey());
-                } catch (ClassCastException e) {
-                    throw new UnsupportedMessageException(box.getKey());
-                 }
+            synchronized (mailBox) {
+                while (mailBox.isEmpty()) {
+                    try {
+                        mailBox.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                box = (Pair<T, ActorRef>)mailBox.remove();
             }
-        }finally {
-            actorLock.unlock();
+
+            try {
+                sender = box.getValue();
+                receive(box.getKey());
+            } catch (ClassCastException e) {
+                throw new UnsupportedMessageException(box.getKey());
+            }
         }
     }
 
     private Queue<Pair<T, ActorRef>> mailBox = new LinkedList<>();
-    private ReentrantLock actorLock= new ReentrantLock();
-    private Condition emptyBox= actorLock.newCondition();
+    //public ReentrantLock actorLock= new ReentrantLock();
+    //public Condition emptyBox= actorLock.newCondition();
     /**
      * Self-reference of the actor
      */
@@ -108,12 +104,16 @@ public abstract class AbsActor<T extends Message>extends Thread implements Actor
         return this;
     }
     public void insertMailBox(T message, ActorRef from) {
-        actorLock.lock();
+        synchronized(mailBox) {
+            mailBox.add(new Pair<T, ActorRef>(message, from));
+            mailBox.notifyAll();
+        }
+       /* actorLock.lock();
         try{
             mailBox.add(new Pair<>(message, from));
             emptyBox.notifyAll();
         }finally {
             actorLock.unlock();
-        }
+        }*/
     }
 }

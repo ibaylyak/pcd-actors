@@ -1,5 +1,7 @@
 package it.unipd.math.pcd.actors.impl;
 import it.unipd.math.pcd.actors.*;
+import it.unipd.math.pcd.actors.exceptions.NoSuchActorException;
+
 /**
  * Created by igor on 10/01/16.
  */
@@ -31,7 +33,7 @@ public class ActorSystemImpl extends AbsActorSystem {
             return new ActorRefImplLocal();
         } else {
             //La parte del framework dedicata alla distribuzione non implementata
-            return null;
+            throw new IllegalArgumentException();
         }
     }
 }
