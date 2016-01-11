@@ -7,8 +7,13 @@ import java.util.concurrent.Executors;
 
 /**
  * Created by igor on 10/01/16.
+ * version 1.0
  */
 public final class ActorSystemImpl extends AbsActorSystem {
+    /**
+     * @param executor an Executor to run Actors like tasks
+     *
+     */
     private ExecutorService executor = Executors.newCachedThreadPool();
 
     @Override
@@ -46,8 +51,7 @@ public final class ActorSystemImpl extends AbsActorSystem {
     }
     private  class ActorRefImplLocal<T extends Message> implements ActorRef<T> {
         /**
-         *
-         * @class ActorRefImplLocal internal implementation of ActorRef
+         *ActorRefImplLocal internal implementation of ActorRef
          *
          */
         @Override
