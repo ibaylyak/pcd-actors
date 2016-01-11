@@ -42,8 +42,6 @@ import javafx.util.Pair;
 
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Defines common properties of all actors.
@@ -52,23 +50,30 @@ import java.util.concurrent.locks.ReentrantLock;
  * @version 1.0
  * @since 1.0
  */
-public abstract class AbsActor<T extends Message> extends Thread implements  Actor<T> {
-
+public abstract class AbsActor<T extends Message>  implements Runnable, Actor<T> {
+    /**
+     *
+     * @param toStop flag variable that indicates to Actor when to stop receiving massages from @code mailingBox
+     * @param mailingBox contains a message queue to process
+     *
+     */
+    private boolean toStop=false;
+    private final Queue<Pair<T, ActorRef>> mailingBox = new LinkedList<>();
 
     @Override
     public void run() {
-        while (!Thread.interrupted()) {
-            Pair<T, ActorRef> box;
 
-            synchronized (mailBox) {
-                while (mailBox.isEmpty()) {
+            Pair<T, ActorRef> box;
+        while(!toStop) {
+            synchronized (mailingBox) {
+                while (mailingBox.isEmpty()) {
                     try {
-                        mailBox.wait();
+                        mailingBox.wait();
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
-                box = (Pair<T, ActorRef>)mailBox.remove();
+                box = mailingBox.remove();
             }
 
             try {
@@ -80,9 +85,7 @@ public abstract class AbsActor<T extends Message> extends Thread implements  Act
         }
     }
 
-    private Queue<Pair<T, ActorRef>> mailBox = new LinkedList<>();
-    //public ReentrantLock actorLock= new ReentrantLock();
-    //public Condition emptyBox= actorLock.newCondition();
+
     /**
      * Self-reference of the actor
      */
@@ -103,17 +106,13 @@ public abstract class AbsActor<T extends Message> extends Thread implements  Act
         this.self = self;
         return this;
     }
+
+    public void stopActor(){toStop=true;}
+
     public void insertMailBox(T message, ActorRef from) {
-        synchronized(mailBox) {
-            mailBox.add(new Pair<T, ActorRef>(message, from));
-            mailBox.notifyAll();
+        synchronized(mailingBox) {
+            mailingBox.add(new Pair<>(message, from));
+            mailingBox.notifyAll();
         }
-       /* actorLock.lock();
-        try{
-            mailBox.add(new Pair<>(message, from));
-            emptyBox.notifyAll();
-        }finally {
-            actorLock.unlock();
-        }*/
     }
 }

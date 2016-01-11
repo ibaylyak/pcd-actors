@@ -41,7 +41,6 @@ import it.unipd.math.pcd.actors.exceptions.NoSuchActorException;
 
 import java.util.Map;
 import java.util.HashMap;
-import java.util.concurrent.Executor;
 
 /**
  * A map-based implementation of the actor system.
@@ -70,7 +69,6 @@ public abstract class AbsActorSystem implements ActorSystem {
             Actor actorInstance = ((AbsActor) actor.newInstance()).setSelf(reference);
             // Associate the reference to the actor
             actors.put(reference, actorInstance);
-            ((AbsActor)actorInstance).start();
         } catch (InstantiationException | IllegalAccessException e) {
             throw new NoSuchActorException(e);
         }
@@ -85,21 +83,8 @@ public abstract class AbsActorSystem implements ActorSystem {
         return actors.get(ref);
     }*/
 
-    protected Actor getActor(ActorRef ref) {
+    public Actor getActor(ActorRef ref) {
         return actors.get(ref);
-    }
-    @Override
-    public void stop(ActorRef<?> actor) {
-        ((AbsActor)actors.get(actor)).interrupt();
-        actors.remove(actor);
-    }
-
-    @Override
-    public void stop() {
-        for (Map.Entry<ActorRef<? extends Message>, Actor<? extends Message>>  a : actors.entrySet())  {
-            ((AbsActor)a.getValue()).interrupt();
-            actors.remove(a);
-        }
     }
     protected abstract ActorRef createActorReference(ActorMode mode);
 }
