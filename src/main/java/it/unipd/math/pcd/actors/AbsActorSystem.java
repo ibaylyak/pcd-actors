@@ -83,7 +83,7 @@ public abstract class AbsActorSystem implements ActorSystem {
         return actors.get(ref);
     }*/
 
-    public Actor getActor(ActorRef ref) {
+    protected Actor getActor(ActorRef ref) {
         return actors.get(ref);
     }
     @Override

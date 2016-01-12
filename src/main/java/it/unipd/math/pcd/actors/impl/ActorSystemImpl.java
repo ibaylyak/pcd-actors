@@ -1,5 +1,4 @@
 package it.unipd.math.pcd.actors.impl;
-import com.sun.istack.internal.NotNull;
 import it.unipd.math.pcd.actors.*;
 
 /**
@@ -7,7 +6,12 @@ import it.unipd.math.pcd.actors.*;
  * version 1.0
  */
 public final class ActorSystemImpl extends AbsActorSystem {
-
+    public static ActorSystemImpl istance=null;
+    public ActorSystemImpl() throws IllegalAccessException {
+        if(istance!=null) throw new IllegalAccessException("Use method getIstance()");
+        istance=this;
+    }
+    public ActorSystemImpl getIstance(){return istance;}
     @Override
     protected ActorRef createActorReference(ActorMode mode) {
         if (mode == ActorMode.LOCAL) return new ActorRefImplLocal<>();
@@ -29,7 +33,7 @@ public final class ActorSystemImpl extends AbsActorSystem {
         }
 
         @Override
-        public int compareTo(@NotNull ActorRef o) {
+        public int compareTo( ActorRef o) {
             /**
              * @param equals indicates that a reference must be equal to itself
              * @param disequals indicates that a reference must be a different to itself
