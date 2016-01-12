@@ -7,11 +7,21 @@ import it.unipd.math.pcd.actors.*;
  */
 public final class ActorSystemImpl extends AbsActorSystem {
     public static ActorSystemImpl istance=null;
+
+    /**
+     *  @Warning ("This method should be refactored")
+     */
+
     public ActorSystemImpl() throws IllegalAccessException {
-        if(istance!=null) throw new IllegalAccessException("Use method getIstance()");
-        istance=this;
+        if(istance!=this && istance!=null) throw new IllegalAccessException("Use getIstance()");
     }
-    public ActorSystemImpl getIstance(){return istance;}
+    public ActorSystemImpl getIstance(){
+        if(istance==null) try {
+            istance=new ActorSystemImpl();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return istance;}
     @Override
     protected ActorRef createActorReference(ActorMode mode) {
         if (mode == ActorMode.LOCAL) return new ActorRefImplLocal<>();
