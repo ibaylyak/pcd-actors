@@ -2,37 +2,12 @@ package it.unipd.math.pcd.actors.impl;
 import com.sun.istack.internal.NotNull;
 import it.unipd.math.pcd.actors.*;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 /**
  * Created by igor on 10/01/16.
  * version 1.0
  */
 public final class ActorSystemImpl extends AbsActorSystem {
-    /**
-     * @param executor an Executor to run Actors like tasks
-     *
-     */
-    private ExecutorService executor = Executors.newCachedThreadPool();
 
-    @Override
-    public ActorRef<? extends Message> actorOf(Class<? extends Actor> actor, ActorMode mode){
-        ActorRef<?> reference =super.actorOf(actor,mode);
-
-        /**
-         * @param actorIstance used to get the underlying actor associated to the reference
-         */
-        final Actor actorIstance = this.getActor(reference);
-        executor.submit(((AbsActor<?>)actorIstance));
-
-        return reference;
-    }
-
-    @Override
-    public ActorRef<? extends Message> actorOf(Class<? extends Actor> actor) {
-        return this.actorOf(actor, ActorMode.LOCAL);
-    }
     @Override
     protected ActorRef createActorReference(ActorMode mode) {
         if (mode == ActorMode.LOCAL) return new ActorRefImplLocal<>();
@@ -41,14 +16,7 @@ public final class ActorSystemImpl extends AbsActorSystem {
             throw new IllegalArgumentException();
         }
     }
-    @Override
-    public void stop() {
-        executor.shutdown();
-    }
-    @Override
-    public void stop(ActorRef<?> actor) {
-        ((AbsActor<?>)getActor(actor)).stopActor();
-    }
+
     private  class ActorRefImplLocal<T extends Message> implements ActorRef<T> {
         /**
          *ActorRefImplLocal internal implementation of ActorRef
@@ -56,7 +24,8 @@ public final class ActorSystemImpl extends AbsActorSystem {
          */
         @Override
         public void send(T message, ActorRef to) {
-            ((AbsActor<T>)getUnderlyingActor(ActorSystemImpl.this)).insertMailBox(message, this);
+            final Actor actorIstance = ActorSystemImpl.this.getActor(to);
+            ((AbsActor<T>)actorIstance).insertMailBox(message, this);
         }
 
         @Override
@@ -69,19 +38,6 @@ public final class ActorSystemImpl extends AbsActorSystem {
             final int disequals = 1;
             return hashCode() == o.hashCode() ? equals : disequals;
         }
-        /**
-         * Returns the {@link Actor} associated to the internal reference.
-         * @param system Actor system from which retrieving the actor
-         *
-         * @return An actor
-         */
-        public Actor getUnderlyingActor(ActorSystem system) {
-            if(system instanceof ActorSystemImpl) {
-                ActorSystemImpl instanceOfSystem = (ActorSystemImpl) system;
-                return instanceOfSystem.getActor(this);
-            }else{
-                return null;
-            }
-        }
+
     }
 }

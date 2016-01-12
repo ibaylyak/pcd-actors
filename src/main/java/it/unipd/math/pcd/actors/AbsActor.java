@@ -42,6 +42,8 @@ import javafx.util.Pair;
 
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Defines common properties of all actors.
@@ -50,21 +52,26 @@ import java.util.Queue;
  * @version 1.0
  * @since 1.0
  */
-public abstract class AbsActor<T extends Message>  implements Runnable, Actor<T> {
+public abstract class AbsActor<T extends Message>  implements  Actor<T> {
     /**
      *
      * @param toStop flag variable that indicates to Actor when to stop receiving massages from @code mailingBox
      * @param mailingBox contains a message queue to process
      *
      */
-    private boolean toStop=false;
+    private ExecutorService executor = Executors.newCachedThreadPool();
+    protected AbsActor(){
+        executor.submit(new PopMessage());
+    }
     private final Queue<Pair<T, ActorRef>> mailingBox = new LinkedList<>();
 
-    @Override
-    public void run() {
 
-            Pair<T, ActorRef> box;
-        while(!toStop) {
+    private class PopMessage implements Runnable {
+        @Override
+        public void run() {
+
+        Pair<T, ActorRef> box;
+        while(true) {
             synchronized (mailingBox) {
                 while (mailingBox.isEmpty()) {
                     try {
@@ -85,6 +92,22 @@ public abstract class AbsActor<T extends Message>  implements Runnable, Actor<T>
         }
     }
 
+    }
+    private class PushMessage implements Runnable{
+        private T message;
+        private ActorRef from;
+        public PushMessage(T message, ActorRef from){
+            this.message=message;
+            this.from=from;
+        }
+        @Override
+        public void run() {
+            synchronized(mailingBox) {
+                mailingBox.add(new Pair<>(message, from));
+                mailingBox.notifyAll();
+            }
+        }
+    }
 
     /**
      * Self-reference of the actor
@@ -107,12 +130,17 @@ public abstract class AbsActor<T extends Message>  implements Runnable, Actor<T>
         return this;
     }
 
-    public void stopActor(){toStop=true;}
+    protected void finalize()throws Throwable{
+            try {
+                executor.shutdown();
+            } finally {
+                super.finalize();
+            }
+    }
 
     public void insertMailBox(T message, ActorRef from) {
-        synchronized(mailingBox) {
-            mailingBox.add(new Pair<>(message, from));
-            mailingBox.notifyAll();
-        }
+        executor.submit(new PushMessage(message,from));
+
     }
+
 }

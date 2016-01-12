@@ -86,5 +86,13 @@ public abstract class AbsActorSystem implements ActorSystem {
     public Actor getActor(ActorRef ref) {
         return actors.get(ref);
     }
+    @Override
+    public void stop(ActorRef<?> actor){
+         actors.remove(actor);
+    }
+    @Override
+    public void stop(){
+         actors.clear();
+    }
     protected abstract ActorRef createActorReference(ActorMode mode);
 }
