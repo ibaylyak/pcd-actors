@@ -39,6 +39,7 @@ package it.unipd.math.pcd.actors.utils;
 
 import it.unipd.math.pcd.actors.AbsActorSystem;
 import it.unipd.math.pcd.actors.ActorSystem;
+import it.unipd.math.pcd.actors.impl.ActorSystemImpl;
 import org.reflections.Reflections;
 
 import java.util.Set;
@@ -60,7 +61,7 @@ public class ActorSystemFactory {
      */
     public static final ActorSystem buildActorSystem() {
         ActorSystem system = null;
-
+/*
         // XXX This code can be optimized
         Reflections reflections = new Reflections(BASE_PACKAGE);
         Set<Class<? extends AbsActorSystem>> subTypes = reflections.getSubTypesOf(AbsActorSystem.class);
@@ -69,8 +70,8 @@ public class ActorSystemFactory {
             system = systemClass.newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
             throw new RuntimeException(e);
-        }
+        }*/
 
-        return system;
+        return system= ActorSystemImpl.getIstance();
     }
 }

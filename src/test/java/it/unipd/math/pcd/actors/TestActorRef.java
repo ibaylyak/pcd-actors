@@ -63,10 +63,8 @@ public class TestActorRef<T extends Message> implements ActorRef<T> {
     public Actor<T> getUnderlyingActor(ActorSystem system) {
         // TODO To implement
         //return null;
-        if(system instanceof AbsActorSystem) {
-            AbsActorSystem instanceOfSystem = (AbsActorSystem) system;
-            return  instanceOfSystem.getActor(reference);
-        }else{
+        if(system instanceof AbsActorSystem) return ((AbsActorSystem) system).getActor(this);
+        else{
             return null;
         }
     }
