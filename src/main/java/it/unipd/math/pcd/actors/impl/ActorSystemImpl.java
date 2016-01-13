@@ -1,5 +1,6 @@
 package it.unipd.math.pcd.actors.impl;
 import it.unipd.math.pcd.actors.*;
+import it.unipd.math.pcd.actors.exceptions.NoSuchActorException;
 
 /**
  * Created by igor on 10/01/16.
@@ -67,8 +68,10 @@ public final class ActorSystemImpl extends AbsActorSystem {
          */
         @Override
         public void send(T message, ActorRef to) {
-            final Actor actorIstance = ActorSystemImpl.instance.getActor(to);
-            ((AbsActor<T>)actorIstance).insertMailBox(message, this);
+            try {
+                final Actor actorIstance = ActorSystemImpl.instance.getActor(to);
+                ((AbsActor<T>) actorIstance).actorMessageListener(message, this);
+            }catch (NoSuchActorException e){ throw e;}
         }
 
         @Override

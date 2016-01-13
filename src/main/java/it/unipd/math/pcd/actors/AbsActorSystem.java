@@ -84,14 +84,19 @@ public abstract class AbsActorSystem implements ActorSystem {
     }*/
 
     protected Actor getActor(ActorRef ref) {
-        return actors.get(ref);
+        Actor actorInstance=actors.get(ref);
+        if( actorInstance==null) throw new  NoSuchActorException("Actor has been deleted");
+        return actorInstance;
     }
     @Override
     public void stop(ActorRef<?> actor){
-         actors.remove(actor);
+        Actor actorInstance=this.getActor(actor);
+        if(((AbsActor)actorInstance).isStoped()) throw new NoSuchActorException("Actor has been stoped");
+        actors.remove(actor);
     }
     @Override
     public void stop(){
+        if(actors.isEmpty()) throw new NoSuchActorException("ActorSystem is empty");
          actors.clear();
     }
     protected abstract ActorRef createActorReference(ActorMode mode);
