@@ -1,6 +1,7 @@
 package it.unipd.math.pcd.actors;
 
 import it.unipd.math.pcd.actors.impl.ActorSystemImpl;
+import it.unipd.math.pcd.actors.utils.ActorSystemFactory;
 import it.unipd.math.pcd.actors.utils.actors.StoreActor;
 import it.unipd.math.pcd.actors.utils.actors.TrivialActor;
 import it.unipd.math.pcd.actors.utils.actors.counter.CounterActor;
@@ -23,13 +24,21 @@ public class ActorSystemSingletonTest {
      * Initializes the {@code system} with a concrete implementation before each test.
      */
     @Before
-    public void init() throws IllegalAccessException {
-        system =ActorSystemImpl.getIstance();
+    public void init()  {
+        system= new ActorSystemImpl();
+
     }
 
-    @Test(expected = IllegalAccessException.class)
-    public void shouldIllegalAccessException() throws IllegalAccessException {
-            ActorSystemImpl SecondSystem = new ActorSystemImpl();
+    @Test
+    public void shouldBeEqualActors()  {
+        TestActorRef ref1 = new TestActorRef(system.actorOf(TrivialActor.class));
+        TrivialActor actor1= (TrivialActor) ref1.getUnderlyingActor(system);
+        system= new ActorSystemImpl();
+        TrivialActor actor2= (TrivialActor) ref1.getUnderlyingActor(system);
+
+        Assert.assertEquals("An Actor must be equal to itself",
+                0, actor1.compareTo(actor2));
+
     }
 
 }

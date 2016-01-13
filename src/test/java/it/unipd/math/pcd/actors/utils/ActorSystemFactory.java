@@ -61,7 +61,7 @@ public class ActorSystemFactory {
      */
     public static final ActorSystem buildActorSystem() {
         ActorSystem system = null;
-/*
+
         // XXX This code can be optimized
         Reflections reflections = new Reflections(BASE_PACKAGE);
         Set<Class<? extends AbsActorSystem>> subTypes = reflections.getSubTypesOf(AbsActorSystem.class);
@@ -70,8 +70,8 @@ public class ActorSystemFactory {
             system = systemClass.newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
             throw new RuntimeException(e);
-        }*/
+        }
 
-        return system= ActorSystemImpl.getIstance();
+        return system;
     }
 }

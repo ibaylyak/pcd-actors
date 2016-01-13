@@ -6,35 +6,57 @@ import it.unipd.math.pcd.actors.*;
  * version 1.0
  */
 public final class ActorSystemImpl extends AbsActorSystem {
-    public static ActorSystemImpl initInstance=null;
-    public static ActorSystemImpl instance=null;
-
-    /**
-     *  @Warning ("This method should be refactored")
-     */
-
-    public ActorSystemImpl() throws IllegalAccessException {
-        if(instance!=this && initInstance!=null){
-            throw new IllegalAccessException("Use getIstance()");
+    private static final ActorSystemImpl instance = new ActorSystemImpl();
+    public ActorSystemImpl getInstance(){return instance;}
+    @Override
+    public ActorRef<? extends Message> actorOf(Class<? extends Actor> actor, ActorMode mode){
+        if(this==instance) {
+            return super.actorOf(actor,mode);
         }else{
-            initInstance=this;
+            return instance.actorOf(actor,mode);
         }
-        instance=this;
+
     }
-    public static ActorSystemImpl getIstance(){
-        if(instance==null && initInstance==null) try {
-            instance=new ActorSystemImpl();
-            initInstance=instance;
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-        return instance;}
+    @Override
+    public ActorRef<? extends Message> actorOf(Class<? extends Actor> actor){
+            return instance.actorOf(actor,ActorMode.LOCAL);
+    }
+
     @Override
     protected ActorRef createActorReference(ActorMode mode) {
-        if (mode == ActorMode.LOCAL) return new ActorRefImplLocal<>();
-        else {
-            //La parte del framework dedicata alla distribuzione non implementata
-            throw new IllegalArgumentException();
+        if(this==instance) {
+            if (mode == ActorMode.LOCAL) return new ActorRefImplLocal<>();
+            else {
+                //La parte del framework dedicata alla distribuzione non implementata
+                throw new IllegalArgumentException();
+            }
+        }else{
+            return instance.createActorReference(mode);
+        }
+    }
+
+    public Actor getActorInstance(ActorRef ref) {
+
+        if(this==instance) {
+            return super.getActor(ref);
+        }else{
+            return instance.getActor(ref);
+        }
+    }
+    @Override
+    public void stop(ActorRef<?> actor){
+                if(this==instance) {
+                    super.stop(actor);
+                }else{
+                    instance.stop(actor);
+                }
+    }
+    @Override
+    public void stop(){
+        if(this==instance) {
+            super.stop();
+        }else{
+            instance.stop();
         }
     }
 
@@ -45,7 +67,7 @@ public final class ActorSystemImpl extends AbsActorSystem {
          */
         @Override
         public void send(T message, ActorRef to) {
-            final Actor actorIstance = ActorSystemImpl.this.getActor(to);
+            final Actor actorIstance = ActorSystemImpl.instance.getActor(to);
             ((AbsActor<T>)actorIstance).insertMailBox(message, this);
         }
 

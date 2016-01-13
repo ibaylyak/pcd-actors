@@ -52,7 +52,7 @@ import java.util.concurrent.Executors;
  * @version 1.0
  * @since 1.0
  */
-public abstract class AbsActor<T extends Message>  implements  Actor<T> {
+public abstract class AbsActor<T extends Message>  implements  Actor<T>, Comparable<AbsActor> {
     /**
      *
      * @param toStop flag variable that indicates to Actor when to stop receiving massages from @code mailingBox
@@ -142,5 +142,17 @@ public abstract class AbsActor<T extends Message>  implements  Actor<T> {
         executor.submit(new PushMessage(message,from));
 
     }
+    @Override
+    public int compareTo( AbsActor o) {
+        /**
+         * @param equals indicates that a reference must be equal to itself
+         * @param disequals indicates that a reference must be a different to itself
+         */
+        final int equals = 0;
+        final int disequals = 1;
+        return hashCode() == o.hashCode() ? equals : disequals;
+    }
+
+
 
 }
