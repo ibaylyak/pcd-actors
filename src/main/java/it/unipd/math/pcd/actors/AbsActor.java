@@ -37,6 +37,15 @@
  */
 package it.unipd.math.pcd.actors;
 
+import it.unipd.math.pcd.actors.exceptions.NoSuchActorException;
+import it.unipd.math.pcd.actors.exceptions.UnsupportedMessageException;
+import javafx.util.Pair;
+
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 /**
  * Defines common properties of all actors.
  *
@@ -44,7 +53,25 @@ package it.unipd.math.pcd.actors;
  * @version 1.0
  * @since 1.0
  */
-public abstract class AbsActor<T extends Message> implements Actor<T> {
+public abstract class AbsActor<T extends Message>  implements  Actor<T>, Comparable<AbsActor> {
+    /**
+     *
+     * @param toStop flag variable that indicates to Actor when to stop receiving massages from @code mailingBox
+     * @param mailingBox contains a message queue to process
+     *
+     */
+
+    private volatile Boolean interupted = false; // flag for interupted state of actor
+    private MessageDispatcher myDispatcher; // instance of MessageDispatcher that manage a mailing queue of actor
+    protected AbsActor(){
+        myDispatcher= new MessageDispatcher();
+
+    }
+
+
+
+
+
 
     /**
      * Self-reference of the actor
@@ -54,7 +81,7 @@ public abstract class AbsActor<T extends Message> implements Actor<T> {
     /**
      * Sender of the current message
      */
-    protected ActorRef<T> sender;
+    protected ActorRef sender;
 
     /**
      * Sets the self-referece.
@@ -66,4 +93,104 @@ public abstract class AbsActor<T extends Message> implements Actor<T> {
         this.self = self;
         return this;
     }
+
+    protected void finalize()throws Throwable{
+            interupted=true;
+            try {
+                    myDispatcher.finalize();
+            } finally {
+                super.finalize();
+            }
+
+    }
+
+
+    public boolean isStoped(){
+            return interupted;
+        } // return an interupted state of actor
+
+    // public method to send a message to Message dispatcher of actor
+    public void actorMessageListener(T message, ActorRef from){
+        myDispatcher.processMessage(message,from);
+    }
+    @Override
+    public int compareTo( AbsActor o) {
+        /**
+         * @param equals indicates that a reference must be equal to itself
+         * @param disequals indicates that a reference must be a different to itself
+         */
+        final int equals = 0;
+        final int disequals = 1;
+        return hashCode() == o.hashCode() ? equals : disequals;
+    }
+
+    //inner class that manage a mailing queue of actor
+private  class MessageDispatcher {
+    private final Queue<Pair<T, ActorRef>> mailingBox = new LinkedList<>();
+    private ExecutorService executor = Executors.newCachedThreadPool();
+    public void processMessage(T message, ActorRef from) {
+        if (!interupted) {
+            // for all PushMessage task there will be one of PopMessage
+            executor.submit(new PushMessage(message, from));
+            executor.submit(new PopMessage());
+        } else throw new NoSuchActorException("Actor has been stoped");
+
+
+    }
+        // task to push a  message to the  queue
+    private class PushMessage implements Runnable{
+        private T message;
+        private ActorRef from;
+        public PushMessage(T message, ActorRef from){
+            this.message=message;
+            this.from=from;
+        }
+        @Override
+        public void run() {
+            synchronized(mailingBox) {
+                mailingBox.add(new Pair<>(message, from));
+                mailingBox.notifyAll();
+            }
+        }
+    }
+        //task to pop a message form the queue
+    private class PopMessage implements Runnable {
+        @Override
+        public void run() {
+
+            Pair<T, ActorRef> box;
+            synchronized (mailingBox) {
+                while (mailingBox.isEmpty()) {
+                    try {
+                        mailingBox.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                box = mailingBox.remove();
+            }
+
+            try {
+                sender = box.getValue();
+                receive(box.getKey());
+            } catch (ClassCastException e) {
+                throw new UnsupportedMessageException(box.getKey());
+            }
+            interupted.notifyAll();
+
+        }
+
+    }
+    protected void finalize()throws Throwable{
+        try {
+            while(!executor.isTerminated()){
+                mailingBox.notifyAll();
+                interupted.wait();
+            }
+        } finally {
+            super.finalize();
+        }
+
+    }
+}
 }

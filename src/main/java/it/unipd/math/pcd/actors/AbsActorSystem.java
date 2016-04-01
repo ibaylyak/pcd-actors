@@ -40,6 +40,7 @@ package it.unipd.math.pcd.actors;
 import it.unipd.math.pcd.actors.exceptions.NoSuchActorException;
 
 import java.util.Map;
+import java.util.HashMap;
 
 /**
  * A map-based implementation of the actor system.
@@ -53,7 +54,8 @@ public abstract class AbsActorSystem implements ActorSystem {
     /**
      * Associates every Actor created with an identifier.
      */
-    private Map<ActorRef<?>, Actor<?>> actors;
+    private Map<ActorRef<?>, Actor<?>> actors= new HashMap<>();
+
 
     @Override
     public ActorRef<? extends Message> actorOf(Class<? extends Actor> actor, ActorMode mode) {
@@ -67,7 +69,6 @@ public abstract class AbsActorSystem implements ActorSystem {
             Actor actorInstance = ((AbsActor) actor.newInstance()).setSelf(reference);
             // Associate the reference to the actor
             actors.put(reference, actorInstance);
-
         } catch (InstantiationException | IllegalAccessException e) {
             throw new NoSuchActorException(e);
         }
@@ -78,6 +79,25 @@ public abstract class AbsActorSystem implements ActorSystem {
     public ActorRef<? extends Message> actorOf(Class<? extends Actor> actor) {
         return this.actorOf(actor, ActorMode.LOCAL);
     }
+    /*public Actor getActorPublic(ActorRef ref) {
+        return actors.get(ref);
+    }*/
 
+    protected Actor getActor(ActorRef ref) {
+        Actor actorInstance=actors.get(ref);
+        if( actorInstance==null) throw new  NoSuchActorException("Actor has been deleted");
+        return actorInstance;
+    }
+    @Override
+    public void stop(ActorRef<?> actor){
+        Actor actorInstance=this.getActor(actor);
+        if(((AbsActor)actorInstance).isStoped()) throw new NoSuchActorException("Actor has been stoped");
+        actors.remove(actor);
+    }
+    @Override
+    public void stop(){
+        if(actors.isEmpty()) throw new NoSuchActorException("ActorSystem is empty");
+         actors.clear();
+    }
     protected abstract ActorRef createActorReference(ActorMode mode);
 }

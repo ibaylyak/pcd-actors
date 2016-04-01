@@ -39,6 +39,7 @@ package it.unipd.math.pcd.actors.utils;
 
 import it.unipd.math.pcd.actors.AbsActorSystem;
 import it.unipd.math.pcd.actors.ActorSystem;
+import it.unipd.math.pcd.actors.impl.ActorSystemImpl;
 import org.reflections.Reflections;
 
 import java.util.Set;
