@@ -61,8 +61,8 @@ public abstract class AbsActor<T extends Message>  implements  Actor<T>, Compara
      *
      */
 
-    private volatile Boolean interupted = false;
-    private MessageDispatcher myDispatcher;
+    private volatile Boolean interupted = false; // flag for interupted state of actor
+    private MessageDispatcher myDispatcher; // instance of MessageDispatcher that manage a mailing queue of actor
     protected AbsActor(){
         myDispatcher= new MessageDispatcher();
 
@@ -107,7 +107,9 @@ public abstract class AbsActor<T extends Message>  implements  Actor<T>, Compara
 
     public boolean isStoped(){
             return interupted;
-        }
+        } // return an interupted state of actor
+
+    // public method to send a message to Message dispatcher of actor
     public void actorMessageListener(T message, ActorRef from){
         myDispatcher.processMessage(message,from);
     }
@@ -121,17 +123,21 @@ public abstract class AbsActor<T extends Message>  implements  Actor<T>, Compara
         final int disequals = 1;
         return hashCode() == o.hashCode() ? equals : disequals;
     }
+
+    //inner class that manage a mailing queue of actor
 private  class MessageDispatcher {
     private final Queue<Pair<T, ActorRef>> mailingBox = new LinkedList<>();
     private ExecutorService executor = Executors.newCachedThreadPool();
     public void processMessage(T message, ActorRef from) {
         if (!interupted) {
+            // for all PushMessage task there will be one of PopMessage
             executor.submit(new PushMessage(message, from));
             executor.submit(new PopMessage());
         } else throw new NoSuchActorException("Actor has been stoped");
 
 
     }
+        // task to push a  message to the  queue
     private class PushMessage implements Runnable{
         private T message;
         private ActorRef from;
@@ -147,6 +153,7 @@ private  class MessageDispatcher {
             }
         }
     }
+        //task to pop a message form the queue
     private class PopMessage implements Runnable {
         @Override
         public void run() {

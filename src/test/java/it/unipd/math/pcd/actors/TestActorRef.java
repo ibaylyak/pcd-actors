@@ -63,7 +63,7 @@ public class TestActorRef<T extends Message> implements ActorRef<T> {
      */
     public Actor<T> getUnderlyingActor(ActorSystem system) {
 
-        if(system instanceof ActorSystemImpl) return (((ActorSystemImpl) system).getInstance()).getActorInstance(this);
+        if(system instanceof ActorSystemImpl) return ((ActorSystemImpl) system).getActor(this);
         else{
             return null;
         }

@@ -7,57 +7,14 @@ import it.unipd.math.pcd.actors.exceptions.NoSuchActorException;
  * version 1.0
  */
 public final class ActorSystemImpl extends AbsActorSystem {
-    private static final ActorSystemImpl instance = new ActorSystemImpl();
-    public ActorSystemImpl getInstance(){return instance;}
-    @Override
-    public ActorRef<? extends Message> actorOf(Class<? extends Actor> actor, ActorMode mode){
-        if(this==instance) {
-            return super.actorOf(actor,mode);
-        }else{
-            return instance.actorOf(actor,mode);
-        }
 
-    }
-    @Override
-    public ActorRef<? extends Message> actorOf(Class<? extends Actor> actor){
-            return instance.actorOf(actor,ActorMode.LOCAL);
-    }
 
     @Override
     protected ActorRef createActorReference(ActorMode mode) {
-        if(this==instance) {
-            if (mode == ActorMode.LOCAL) return new ActorRefImplLocal<>();
-            else {
-                //La parte del framework dedicata alla distribuzione non implementata
-                throw new IllegalArgumentException();
-            }
-        }else{
-            return instance.createActorReference(mode);
-        }
-    }
-
-    public Actor getActorInstance(ActorRef ref) {
-
-        if(this==instance) {
-            return super.getActor(ref);
-        }else{
-            return instance.getActor(ref);
-        }
-    }
-    @Override
-    public void stop(ActorRef<?> actor){
-                if(this==instance) {
-                    super.stop(actor);
-                }else{
-                    instance.stop(actor);
-                }
-    }
-    @Override
-    public void stop(){
-        if(this==instance) {
-            super.stop();
-        }else{
-            instance.stop();
+        if (mode == ActorMode.LOCAL) {
+            return new ActorRefImplLocal();
+        } else {
+            throw new IllegalArgumentException();
         }
     }
 
@@ -69,7 +26,7 @@ public final class ActorSystemImpl extends AbsActorSystem {
         @Override
         public void send(T message, ActorRef to) {
             try {
-                final Actor actorIstance = ActorSystemImpl.instance.getActor(to);
+                final Actor actorIstance = ActorSystemImpl.this.getActor(to);
                 ((AbsActor<T>) actorIstance).actorMessageListener(message, this);
             }catch (NoSuchActorException e){ throw e;}
         }
